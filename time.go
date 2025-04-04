@@ -1,0 +1,72 @@
+package validate
+
+import (
+	"context"
+	"time"
+)
+
+type TimeValidator struct {
+	reflectValue
+	rules
+}
+
+func Time(ptr any) *TimeValidator {
+	return &TimeValidator{
+		reflectValue: newReflectValue(ptr),
+	}
+}
+
+func (v *TimeValidator) Before(t time.Time) *TimeValidator {
+	v.rules = append(v.rules, func(ctx context.Context) error {
+		if v.isZero {
+			return nil
+		}
+
+		if !v.valueOf.Interface().(time.Time).Before(t) {
+			return BeforeError{
+				Value: t,
+			}
+		}
+
+		return nil
+	})
+
+	return v
+}
+
+func (v *TimeValidator) After(t time.Time) *TimeValidator {
+	v.rules = append(v.rules, func(ctx context.Context) error {
+		if v.isZero {
+			return nil
+		}
+
+		if !v.valueOf.Interface().(time.Time).After(t) {
+			return AfterError{
+				Value: t,
+			}
+		}
+
+		return nil
+	})
+
+	return v
+}
+
+func (v *TimeValidator) Between(start, end time.Time) *TimeValidator {
+	v.rules = append(v.rules, func(ctx context.Context) error {
+		if v.isZero {
+			return nil
+		}
+
+		if !v.valueOf.Interface().(time.Time).After(start) || !v.valueOf.Interface().(time.Time).Before(end) {
+			return RangeError{
+				Min: start,
+				Max: end,
+			}
+		}
+
+		return nil
+	})
+
+	return v
+}
