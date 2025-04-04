@@ -37,19 +37,19 @@ type (
 	}
 
 	MinLengthError struct {
-		Min     int
-		Current int
+		Min    int
+		Length int
 	}
 
 	MaxLengthError struct {
-		Max     int
-		Current int
+		Max    int
+		Length int
 	}
 
 	LengthError struct {
-		Min     int
-		Max     int
-		Current int
+		Min    int
+		Max    int
+		Length int
 	}
 
 	BeforeError struct {

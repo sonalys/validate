@@ -64,8 +64,8 @@ func (v reflectValue) ruleMinLength(minLength int) ValidatorFunc {
 	return func(ctx context.Context) error {
 		if length < minLength {
 			return MinLengthError{
-				Min:     minLength,
-				Current: length,
+				Min:    minLength,
+				Length: length,
 			}
 		}
 		return nil
@@ -80,8 +80,8 @@ func (v reflectValue) ruleMaxLength(maxLength int) ValidatorFunc {
 	return func(ctx context.Context) error {
 		if length > maxLength {
 			return MaxLengthError{
-				Max:     maxLength,
-				Current: length,
+				Max:    maxLength,
+				Length: length,
 			}
 		}
 		return nil
@@ -96,9 +96,9 @@ func (v reflectValue) ruleLength(minLength, maxLength int) ValidatorFunc {
 	return func(ctx context.Context) error {
 		if length < minLength || length > maxLength {
 			return LengthError{
-				Min:     minLength,
-				Max:     maxLength,
-				Current: length,
+				Min:    minLength,
+				Max:    maxLength,
+				Length: length,
 			}
 		}
 		return nil
