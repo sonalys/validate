@@ -1,23 +1,22 @@
 package validate
 
 import (
+	"cmp"
 	"context"
-
-	"golang.org/x/exp/constraints"
 )
 
-type NumberValidator[T constraints.Ordered] struct {
+type NumberValidator[T cmp.Ordered] struct {
 	reflectValue
 	rules
 }
 
-func Number[T constraints.Ordered](ptr *T) *NumberValidator[T] {
+func Number[T cmp.Ordered](ptr *T) *NumberValidator[T] {
 	return &NumberValidator[T]{
 		reflectValue: newReflectValue(ptr),
 	}
 }
 
-func min[T constraints.Ordered](value, min T) error {
+func min[T cmp.Ordered](value, min T) error {
 	if value < min {
 		return MinValueError{
 			Value: min,
@@ -27,7 +26,7 @@ func min[T constraints.Ordered](value, min T) error {
 	return nil
 }
 
-func max[T constraints.Ordered](value, max T) error {
+func max[T cmp.Ordered](value, max T) error {
 	if value > max {
 		return MaxValueError{
 			Value: max,
@@ -37,7 +36,7 @@ func max[T constraints.Ordered](value, max T) error {
 	return nil
 }
 
-func checkRange[T constraints.Ordered](value, min, max T) error {
+func checkRange[T cmp.Ordered](value, min, max T) error {
 	if value < min || value > max {
 		return RangeError{
 			Min: min,
