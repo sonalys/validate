@@ -6,18 +6,22 @@ import (
 )
 
 type TimeValidator struct {
-	reflectValue
-	rules
+	*rules
 }
 
 func Time(ptr any) *TimeValidator {
 	return &TimeValidator{
-		reflectValue: newReflectValue(ptr),
+		rules: newRules(ptr),
 	}
 }
 
+func (v *TimeValidator) Optional() *TimeValidator {
+	v.rules.optional = true
+	return v
+}
+
 func (v *TimeValidator) Before(t time.Time) *TimeValidator {
-	v.rules = append(v.rules, func(ctx context.Context) error {
+	v.rules.Append(func(ctx context.Context) error {
 		if v.isZero {
 			return nil
 		}
@@ -35,7 +39,7 @@ func (v *TimeValidator) Before(t time.Time) *TimeValidator {
 }
 
 func (v *TimeValidator) After(t time.Time) *TimeValidator {
-	v.rules = append(v.rules, func(ctx context.Context) error {
+	v.rules.Append(func(ctx context.Context) error {
 		if v.isZero {
 			return nil
 		}
@@ -53,7 +57,7 @@ func (v *TimeValidator) After(t time.Time) *TimeValidator {
 }
 
 func (v *TimeValidator) Between(start, end time.Time) *TimeValidator {
-	v.rules = append(v.rules, func(ctx context.Context) error {
+	v.rules.Append(func(ctx context.Context) error {
 		if v.isZero {
 			return nil
 		}

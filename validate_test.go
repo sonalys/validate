@@ -12,7 +12,7 @@ func Test_Struct(t *testing.T) {
 	type TestStruct struct {
 		Name     string     `json:"name"`
 		Email    string     `json:"personal_email"`
-		Age      int        `json:"age"`
+		Age      *int       `json:"age"`
 		Birthday *time.Time `json:"birthday"`
 	}
 
@@ -23,7 +23,7 @@ func Test_Struct(t *testing.T) {
 	test := TestStruct{
 		Name:     "Joe",
 		Email:    "example@domain.com",
-		Age:      18,
+		Age:      nil,
 		Birthday: &birthday,
 	}
 
@@ -31,10 +31,10 @@ func Test_Struct(t *testing.T) {
 		validate.String(&test.Name).
 			MinLength(3),
 		validate.String(&test.Email).
-			MinLength(3).
-			MaxLength(250),
-		validate.Number(&test.Age).
-			Range(1, 18),
+			Length(5, 250),
+		validate.Number[int](&test.Age).
+			Optional().
+			Range(0, 18),
 		validate.Time(&test.Birthday).
 			Between(time.Now().AddDate(-99, 0, 0), time.Now().AddDate(-18, 0, 0)),
 	)

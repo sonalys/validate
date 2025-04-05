@@ -12,10 +12,14 @@ type (
 		pointer() uintptr
 	}
 
-	ValidatorFunc  func(context.Context) error
+	Rule           func(context.Context) error
 	FieldFormatter func(value reflect.StructField) string
 
-	rules []ValidatorFunc
+	rules struct {
+		reflectValue
+		rules    []Rule
+		optional bool
+	}
 )
 
 // FieldFormatterStructName is the default field formatter for new struct validators.
@@ -43,16 +47,27 @@ var errorPool = sync.Pool{
 	},
 }
 
-func (r rules) Validate(ctx context.Context) error {
-	if len(r) == 0 {
+func newRules(value any) *rules {
+	return &rules{
+		reflectValue: newReflectValue(value),
+		rules:        make([]Rule, 0),
+	}
+}
+
+func (r *rules) Validate(ctx context.Context) error {
+	if len(r.rules) == 0 || r.isZero && r.optional {
 		return nil
+	}
+
+	if r.isZero && !r.optional {
+		return ErrFieldRequired
 	}
 
 	errs := errorPool.Get().([]error)
 	errs = errs[:0]
 	defer errorPool.Put(errs)
 
-	for _, rule := range r {
+	for _, rule := range r.rules {
 		if err := rule(ctx); err != nil {
 			errs = append(errs, err)
 		}
@@ -65,4 +80,8 @@ func (r rules) Validate(ctx context.Context) error {
 	multiErr := MultiError(errs)
 
 	return multiErr
+}
+
+func (r *rules) Append(rule Rule) {
+	r.rules = append(r.rules, rule)
 }

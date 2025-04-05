@@ -2,6 +2,7 @@ package validate
 
 import (
 	"context"
+	"fmt"
 )
 
 type (
@@ -10,15 +11,42 @@ type (
 		rules           []FieldValidator
 		fieldNameGetter FieldFormatter
 		failFast        bool
+		optional        bool
 	}
 )
 
 func Struct(target any, rules ...FieldValidator) *StructValidator {
+	reflectValue := newReflectValue(target)
+
+	validateFields(reflectValue, rules...)
+
 	return &StructValidator{
-		reflectValue:    newReflectValue(target),
+		reflectValue:    reflectValue,
 		rules:           rules,
 		fieldNameGetter: DefaultFieldFormatter,
 		failFast:        DefaultFailFastBehavior,
+	}
+}
+
+func validateFields(value reflectValue, rules ...FieldValidator) {
+	startOffset := value.ptr
+
+	var biggestOffset uintptr
+
+	for i := range value.typeOf.NumField() {
+		fieldTypeOf := value.typeOf.Field(i)
+		if fieldTypeOf.Offset > biggestOffset {
+			biggestOffset = fieldTypeOf.Offset
+		}
+	}
+
+	endOffset := startOffset + biggestOffset
+
+	for i, rule := range rules {
+		ptr := rule.pointer()
+		if ptr < startOffset || ptr > endOffset {
+			panic(fmt.Sprintf("field %d does not belong to the struct", i))
+		}
 	}
 }
 
@@ -46,9 +74,18 @@ func (v *StructValidator) getFieldNameValue(fieldPtr uintptr) (string, any) {
 	return "", nil
 }
 
+func (v *StructValidator) Optional() *StructValidator {
+	v.optional = true
+	return v
+}
+
 func (v *StructValidator) Validate(ctx context.Context) error {
-	if len(v.rules) == 0 {
+	if len(v.rules) == 0 || v.optional && v.isZero {
 		return nil
+	}
+
+	if !v.optional && v.isZero {
+		return ErrFieldRequired
 	}
 
 	errs := errorPool.Get().([]error)

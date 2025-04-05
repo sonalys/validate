@@ -59,6 +59,12 @@ type (
 	AfterError struct {
 		Value any
 	}
+
+	StringError string
+)
+
+const (
+	ErrFieldRequired StringError = "required"
 )
 
 func (e FieldError) Error() string {
@@ -121,4 +127,8 @@ func (e BeforeError) Error() string {
 
 func (e AfterError) Error() string {
 	return fmt.Sprintf("must be after %v", e.Value)
+}
+
+func (e StringError) Error() string {
+	return string(e)
 }

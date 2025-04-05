@@ -9,38 +9,42 @@ import (
 )
 
 type StringValidator struct {
-	reflectValue
-	rules
+	*rules
 }
 
 func String(ptr any) *StringValidator {
 	return &StringValidator{
-		reflectValue: newReflectValue(ptr),
+		rules: newRules(ptr),
 	}
 }
 
+func (v *StringValidator) Optional() *StringValidator {
+	v.rules.optional = true
+	return v
+}
+
 func (v *StringValidator) NotEmpty() *StringValidator {
-	v.rules = append(v.rules, v.ruleNotEmpty())
+	v.rules.Append(v.ruleNotEmpty())
 	return v
 }
 
 func (v *StringValidator) MinLength(min int) *StringValidator {
-	v.rules = append(v.rules, v.ruleMinLength(min))
+	v.rules.Append(v.ruleMinLength(min))
 	return v
 }
 
 func (v *StringValidator) MaxLength(max int) *StringValidator {
-	v.rules = append(v.rules, v.ruleMaxLength(max))
+	v.rules.Append(v.ruleMaxLength(max))
 	return v
 }
 
 func (v *StringValidator) Length(min, max int) *StringValidator {
-	v.rules = append(v.rules, v.ruleLength(min, max))
+	v.rules.Append(v.ruleLength(min, max))
 	return v
 }
 
 func (v *StringValidator) Matches(pattern string) *StringValidator {
-	v.rules = append(v.rules, func(ctx context.Context) error {
+	v.rules.Append(func(ctx context.Context) error {
 		if !matches(v.valueOf.String(), pattern) {
 			return PatternError{
 				ShouldMatch: true,
@@ -55,7 +59,7 @@ func (v *StringValidator) Matches(pattern string) *StringValidator {
 }
 
 func (v *StringValidator) NotMatches(pattern string) *StringValidator {
-	v.rules = append(v.rules, func(ctx context.Context) error {
+	v.rules.Append(func(ctx context.Context) error {
 		if matches(v.valueOf.String(), pattern) {
 			return fmt.Errorf("must not match pattern %w", PatternError{
 				ShouldMatch: false,
@@ -79,7 +83,7 @@ func matches(value, pattern string) bool {
 }
 
 func (v *StringValidator) In(values ...string) *StringValidator {
-	v.rules = append(v.rules, func(ctx context.Context) error {
+	v.rules.Append(func(ctx context.Context) error {
 		if !slices.Contains(values, v.valueOf.String()) {
 			return fmt.Errorf("must be one of %v", values)
 		}
@@ -91,7 +95,7 @@ func (v *StringValidator) In(values ...string) *StringValidator {
 }
 
 func (v *StringValidator) NotIn(values ...string) *StringValidator {
-	v.rules = append(v.rules, func(ctx context.Context) error {
+	v.rules.Append(func(ctx context.Context) error {
 		if slices.Contains(values, v.valueOf.String()) {
 			return fmt.Errorf("must not be one of %v", values)
 		}
@@ -103,7 +107,7 @@ func (v *StringValidator) NotIn(values ...string) *StringValidator {
 }
 
 func (v *StringValidator) IsEmail() *StringValidator {
-	v.rules = append(v.rules, func(ctx context.Context) error {
+	v.rules.Append(func(ctx context.Context) error {
 		if _, err := mail.ParseAddress(v.valueOf.String()); err != nil {
 			return fmt.Errorf("must be a valid email address: %w", err)
 		}

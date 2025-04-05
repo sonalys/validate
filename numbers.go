@@ -6,14 +6,18 @@ import (
 )
 
 type NumberValidator[T cmp.Ordered] struct {
-	reflectValue
-	rules
+	*rules
 }
 
-func Number[T cmp.Ordered](ptr *T) *NumberValidator[T] {
+func Number[T cmp.Ordered, N **T | *T](ptr N) *NumberValidator[T] {
 	return &NumberValidator[T]{
-		reflectValue: newReflectValue(ptr),
+		rules: newRules(ptr),
 	}
+}
+
+func (v *NumberValidator[T]) Optional() *NumberValidator[T] {
+	v.rules.optional = true
+	return v
 }
 
 func min[T cmp.Ordered](value, min T) error {
@@ -48,7 +52,7 @@ func checkRange[T cmp.Ordered](value, min, max T) error {
 }
 
 func (v *NumberValidator[T]) Min(minValue T) *NumberValidator[T] {
-	v.rules = append(v.rules, func(ctx context.Context) error {
+	v.rules.Append(func(ctx context.Context) error {
 		if v.isZero {
 			return nil
 		}
@@ -60,7 +64,7 @@ func (v *NumberValidator[T]) Min(minValue T) *NumberValidator[T] {
 }
 
 func (v *NumberValidator[T]) Max(maxValue T) *NumberValidator[T] {
-	v.rules = append(v.rules, func(ctx context.Context) error {
+	v.rules.Append(func(ctx context.Context) error {
 		if v.isZero {
 			return nil
 		}
@@ -72,7 +76,7 @@ func (v *NumberValidator[T]) Max(maxValue T) *NumberValidator[T] {
 }
 
 func (v *NumberValidator[T]) Range(minValue, maxValue T) *NumberValidator[T] {
-	v.rules = append(v.rules, func(ctx context.Context) error {
+	v.rules.Append(func(ctx context.Context) error {
 		if v.isZero {
 			return nil
 		}

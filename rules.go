@@ -21,11 +21,12 @@ func newReflectValue(target any) reflectValue {
 	if !isZero {
 		typeOf = value.Type()
 	}
+
 	return reflectValue{
 		valueOf: value,
 		typeOf:  typeOf,
 		isZero:  isZero,
-		ptr:     valueOf.Elem().Addr().Pointer(),
+		ptr:     valueOf.Pointer(),
 	}
 }
 
@@ -47,7 +48,7 @@ func getValue(target any) (reflect.Value, bool) {
 	return value, false
 }
 
-func (v reflectValue) ruleNotEmpty() ValidatorFunc {
+func (v reflectValue) ruleNotEmpty() Rule {
 	return func(ctx context.Context) error {
 		if v.isZero || v.valueOf.Len() == 0 {
 			return fmt.Errorf("value must not be empty")
@@ -56,7 +57,7 @@ func (v reflectValue) ruleNotEmpty() ValidatorFunc {
 	}
 }
 
-func (v reflectValue) ruleMinLength(minLength int) ValidatorFunc {
+func (v reflectValue) ruleMinLength(minLength int) Rule {
 	length := 0
 	if !v.isZero {
 		length = v.valueOf.Len()
@@ -72,7 +73,7 @@ func (v reflectValue) ruleMinLength(minLength int) ValidatorFunc {
 	}
 }
 
-func (v reflectValue) ruleMaxLength(maxLength int) ValidatorFunc {
+func (v reflectValue) ruleMaxLength(maxLength int) Rule {
 	length := 0
 	if !v.isZero {
 		length = v.valueOf.Len()
@@ -88,7 +89,7 @@ func (v reflectValue) ruleMaxLength(maxLength int) ValidatorFunc {
 	}
 }
 
-func (v reflectValue) ruleLength(minLength, maxLength int) ValidatorFunc {
+func (v reflectValue) ruleLength(minLength, maxLength int) Rule {
 	length := 0
 	if !v.isZero {
 		length = v.valueOf.Len()
