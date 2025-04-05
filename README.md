@@ -57,7 +57,7 @@ import (
 
 func main() {
 	age := 25
-	validation := validate.Number(&age).
+	validation := validate.Number[int](&age).
 		Min(18).
 		Max(60)
 
@@ -128,8 +128,8 @@ func main() {
 	validation := validate.Struct(&user,
 		validate.String(&user.Name).NotEmpty().MinLength(3),
 		validate.String(&user.Email).IsEmail(),
-		validate.Number(&user.Age).Range(18, 60),
-		validate.Time(&user.Birthday).Before(time.Now()),
+		validate.Number[int](&user.Age).Range(18, 60),
+		validate.Time(&user.Birthday).Optional().Before(time.Now()),
 	)
 
 	err := validation.Validate(context.Background())
